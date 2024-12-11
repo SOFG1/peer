@@ -1,5 +1,6 @@
 //const socket = io("192.168.100.101:3000");
 const socket = io("https://server-qoi0.onrender.com");
+let currentKey = ""
 
 const testBtn = document.querySelector(".test-socket");
 socket.on("test", (d) => alert("test"));
@@ -29,19 +30,15 @@ function setLoading(isLoading) {
 
 let peers = {}; //use these if host device
 
-function destroy() {
-  Object.values(peers).forEach((p) => p.destroy());
-}
-
 testPeerBtn.addEventListener("click", () => {
   const list = Object.values(peers);
   list.forEach((p) => p.send("data"));
 });
 
 socket.on("connection-started", (d) => {
-  destroy();
   peers = {};
   setLoading(true);
+  currentKey = d.join("")
   const isHost = d.indexOf(socket.id) === 0
   if (isHost) {
     createInitiatorPeers(d.slice(1));
@@ -52,14 +49,12 @@ socket.on("connection-started", (d) => {
 });
 
 function createSinglePeer(socketId) {
-  destroy();
   const p = new SimplePeer({ initiator: false, trickle: false });
   peers = {
     [socketId]: p,
   };
   p.on("signal", (data) => {
-    console.log({ id: socketId, data });
-    socket.emit("signal", { id: socketId, data });
+    socket.emit("signal", { id: socketId, data, currentKey });
   });
   p.on("data", receiveData);
   p.on("connect", () => {
@@ -69,14 +64,13 @@ function createSinglePeer(socketId) {
 }
 
 function createInitiatorPeers(ids) {
-  destroy();
   const list = {};
   ids.forEach((id) => {
     const p = new SimplePeer({ initiator: true, trickle: false });
     list[id] = p;
     p.on("signal", (data) => {
       console.log({ id, data });
-      socket.emit("signal", { id, data });
+      socket.emit("signal", { id, data, currentKey });
     });
     p.on("data", receiveData);
     p.on("connect", () => {
@@ -94,8 +88,7 @@ function receiveData(d) {
   alert(jsonString);
 }
 
-socket.on("signal", ({ id, data }) => {
-  console.log({ id, data });
-  console.log(peers[id]?._channel);
+socket.on("signal", ({ id, data, currentKey: key }) => {
+  if(currentKey !== key) return
   peers[id]?.signal(data);
 });
