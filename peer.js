@@ -42,7 +42,7 @@ socket.on("connection-started", (d) => {
   destroy();
   peers = {};
   setLoading(true);
-  const isHost = window.innerWidth > 500
+  const isHost = d.indexOf(socket.id) === 0
   if (isHost) {
     createInitiatorPeers(d.slice(1));
   }
