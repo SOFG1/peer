@@ -1,6 +1,5 @@
 //const socket = io("192.168.100.101:3000");
 const socket = io("https://server-qoi0.onrender.com");
-let currentKey = ""
 
 const testBtn = document.querySelector(".test-socket");
 socket.on("test", (d) => alert("test"));
@@ -38,7 +37,6 @@ testPeerBtn.addEventListener("click", () => {
 socket.on("connection-started", (d) => {
   peers = {};
   setLoading(true);
-  currentKey = d.join("")
   const isHost = d.indexOf(socket.id) === 0
   if (isHost) {
     createInitiatorPeers(d.slice(1));
@@ -54,7 +52,7 @@ function createSinglePeer(socketId) {
     [socketId]: p,
   };
   p.on("signal", (data) => {
-    socket.emit("signal", { id: socketId, data, currentKey });
+    socket.emit("signal", { id: socketId, data });
   });
   p.on("data", receiveData);
   p.on("connect", () => {
@@ -70,7 +68,7 @@ function createInitiatorPeers(ids) {
     list[id] = p;
     p.on("signal", (data) => {
       console.log({ id, data });
-      socket.emit("signal", { id, data, currentKey });
+      socket.emit("signal", { id, data });
     });
     p.on("data", receiveData);
     p.on("connect", () => {
@@ -88,7 +86,6 @@ function receiveData(d) {
   alert(jsonString);
 }
 
-socket.on("signal", ({ id, data, currentKey: key }) => {
-  if(currentKey !== key) return
+socket.on("signal", ({ id, data }) => {
   peers[id]?.signal(data);
 });
