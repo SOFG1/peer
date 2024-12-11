@@ -1,4 +1,7 @@
-const socket = io("192.168.100.101:3000");
+//const socket = io("192.168.100.101:3000");
+const socket = io("https://server-qoi0.onrender.com");
+
+
 
 const testBtn = document.querySelector(".test-socket");
 socket.on("test", (d) => alert("test"));
