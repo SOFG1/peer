@@ -9,6 +9,17 @@ testBtn.addEventListener("click", () => {
   socket.emit("test", "test");
 });
 
+function setLoading(isLoading) {
+  if (isLoading) {
+    document.querySelector(".test-peer").classList.add("hidden");
+    document.querySelector(".loading").classList.remove("hidden");
+  }
+  if (!isLoading) {
+    document.querySelector(".test-peer").classList.remove("hidden");
+    document.querySelector(".loading").classList.add("hidden");
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -19,7 +30,7 @@ testBtn.addEventListener("click", () => {
 let peers = {}; //use these if host device
 
 function destroy() {
-  Object.values(peers).forEach(p => p.destroy())
+  Object.values(peers).forEach((p) => p.destroy());
 }
 
 testPeerBtn.addEventListener("click", () => {
@@ -28,19 +39,20 @@ testPeerBtn.addEventListener("click", () => {
 });
 
 socket.on("connection-started", (d) => {
-  destroy()
+  destroy();
   peers = {};
-  console.log(d);
-  if (d.indexOf(socket.id) === 0) {
+  setLoading(true);
+  const isHost = window.innerWidth > 500
+  if (isHost) {
     createInitiatorPeers(d.slice(1));
   }
-  if (d.indexOf(socket.id) !== 0) {
+  if (!isHost) {
     createSinglePeer(socket.id);
   }
 });
 
 function createSinglePeer(socketId) {
-  destroy()
+  destroy();
   const p = new SimplePeer({ initiator: false, trickle: false });
   peers = {
     [socketId]: p,
@@ -52,11 +64,12 @@ function createSinglePeer(socketId) {
   p.on("data", receiveData);
   p.on("connect", () => {
     console.log("Peer connected!");
+    setLoading(false);
   });
 }
 
 function createInitiatorPeers(ids) {
-  destroy()
+  destroy();
   const list = {};
   ids.forEach((id) => {
     const p = new SimplePeer({ initiator: true, trickle: false });
@@ -68,6 +81,7 @@ function createInitiatorPeers(ids) {
     p.on("data", receiveData);
     p.on("connect", () => {
       console.log("Peer connected!");
+      setLoading(false);
     });
   });
   peers = list;
